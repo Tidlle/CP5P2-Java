@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Pagamento confirmado</title>
+</head>
+<!-- E-mail em HTML com estilos inline (clientes de e-mail ignoram CSS externo) -->
+<body style="margin:0;padding:0;background:#fbf7ef;font-family:Segoe UI,Arial,sans-serif;color:#22312a;">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#fbf7ef;padding:24px 0;">
+    <tr>
+        <td align="center">
+            <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;background:#ffffff;border-radius:14px;overflow:hidden;">
+                <tr>
+                    <td style="background:#1f7a4d;color:#ffffff;padding:24px 32px;">
+                        <div style="font-size:20px;font-weight:bold;">Mercado <span style="color:#f2994a;">Express</span></div>
+                        <div style="font-size:14px;opacity:.85;margin-top:4px;">Confirmação de pagamento</div>
+                    </td>
+                </tr>
+                <tr>
+                    <td style="padding:28px 32px 8px;">
+                        <p style="font-size:16px;margin:0 0 12px;">Olá, <strong th:text="${pedido.clienteNome}">Cliente</strong>!</p>
+                        <p style="font-size:15px;margin:0 0 16px;line-height:1.5;">
+                            O <strong>Banco Tranquilo</strong> confirmou o pagamento do seu pedido
+                            <strong style="font-family:Consolas,monospace;" th:text="${codigoCurto}">ABC12345</strong>.
+                            Obrigado por comprar no Mercado Express!
+                        </p>
+                        <table role="presentation" cellpadding="0" cellspacing="0" style="font-size:13px;color:#52514e;margin-bottom:16px;">
+                            <tr><td style="padding:2px 12px 2px 0;">Forma de pagamento</td><td th:text="${pedido.formaPagamento.descricao}">Pix</td></tr>
+                            <tr><td style="padding:2px 12px 2px 0;">Data da compra</td><td th:text="${#temporals.format(pedido.dataCriacao, 'dd/MM/yyyy HH:mm')}">01/01/2026</td></tr>
+                            <tr><td style="padding:2px 12px 2px 0;">Transação</td><td style="font-family:Consolas,monospace;" th:text="${pedido.transacaoId}">-</td></tr>
+                        </table>
+                    </td>
+                </tr>
+                <tr>
+                    <td style="padding:0 32px;">
+                        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="font-size:14px;border-collapse:collapse;">
+                            <tr style="background:#eaf4ee;">
+                                <th align="left" style="padding:8px;">Produto</th>
+                                <th align="right" style="padding:8px;">Qtd.</th>
+                                <th align="right" style="padding:8px;">Subtotal</th>
+                            </tr>
+                            <tr th:each="i : ${pedido.itens}" style="border-bottom:1px solid #eeeeee;">
+                                <td style="padding:8px;" th:text="${i.produtoNome}">Produto</td>
+                                <td align="right" style="padding:8px;" th:text="${i.quantidade}">1</td>
+                                <td align="right" style="padding:8px;white-space:nowrap;" th:text="${'R$ ' + #numbers.formatDecimal(i.subtotal, 1, 'POINT', 2, 'COMMA')}">R$ 0,00</td>
+                            </tr>
+                            <tr>
+                                <td colspan="2" align="right" style="padding:12px 8px;font-weight:bold;">Total pago</td>
+                                <td align="right" style="padding:12px 8px;font-weight:bold;color:#1f7a4d;font-size:16px;white-space:nowrap;"
+                                    th:text="${'R$ ' + #numbers.formatDecimal(pedido.valorTotal, 1, 'POINT', 2, 'COMMA')}">R$ 0,00</td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+                <tr>
+                    <td style="padding:16px 32px 28px;font-size:12px;color:#8a8a85;">
+                        Este é um e-mail automático do Mercado Express (CP5 TDS FIAP). Não é necessário respondê-lo.
+                    </td>
+                </tr>
+            </table>
+        </td>
+    </tr>
+</table>
+</body>
+</html>

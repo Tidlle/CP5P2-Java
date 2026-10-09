@@ -1,0 +1,8 @@
+target/
+.idea/
+.git/
+*.iml
+run.log
+assets/
+banco-tranquilo/
+postman/

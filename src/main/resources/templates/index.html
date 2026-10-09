@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{fragments/layout :: head('Início')}"></head>
+<body>
+
+<div th:replace="~{fragments/layout :: nav}"></div>
+
+<header class="hero" style="margin-top: -1.5rem;">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-lg-7">
+                <h1 class="display-5 fw-bold">Seu mercado <span>express</span>,<br>rápido e sem fila.</h1>
+                <p class="lead mt-3 mb-4">
+                    Meias, produtos de limpeza e hortifruti em um só lugar.
+                    Crie sua conta para consultar o catálogo completo de produtos.
+                </p>
+                <div sec:authorize="isAnonymous()" class="d-flex gap-2 flex-wrap">
+                    <a th:href="@{/login}" class="btn btn-light btn-lg px-4"><i class="bi bi-box-arrow-in-right me-2"></i>Entrar</a>
+                    <a th:href="@{/cadastro}" class="btn btn-mx-laranja btn-lg px-4"><i class="bi bi-person-plus me-2"></i>Criar conta grátis</a>
+                </div>
+                <div sec:authorize="isAuthenticated()" class="d-flex gap-2 flex-wrap">
+                    <a th:href="@{/mercado}" class="btn btn-light btn-lg px-4"><i class="bi bi-grid-3x3-gap me-2"></i>Ver produtos</a>
+                    <a sec:authorize="hasRole('ADMIN')" th:href="@{/admin}" class="btn btn-mx-laranja btn-lg px-4"><i class="bi bi-speedometer2 me-2"></i>Painel admin</a>
+                </div>
+            </div>
+            <div class="col-lg-5 text-center d-none d-lg-block hero-icone"><i class="bi bi-cart4"></i></div>
+        </div>
+    </div>
+</header>
+
+<main class="container py-5">
+    <h2 class="h4 text-center mb-4">Nossos setores</h2>
+    <div class="row g-4">
+        <div class="col-md-4">
+            <div class="card setor-card shadow-sm h-100 text-center p-4">
+                <div class="setor-icone"><i class="fa-solid fa-socks"></i></div>
+                <h3 class="h5 mt-2">Meias</h3>
+                <p class="text-muted mb-0">Cano alto, esportivas e kits para o dia a dia.</p>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card setor-card shadow-sm h-100 text-center p-4">
+                <div class="setor-icone"><i class="fa-solid fa-spray-can-sparkles"></i></div>
+                <h3 class="h5 mt-2">Produtos de limpeza</h3>
+                <p class="text-muted mb-0">Tudo para deixar a casa brilhando.</p>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card setor-card shadow-sm h-100 text-center p-4">
+                <div class="setor-icone"><i class="fa-solid fa-apple-whole"></i></div>
+                <h3 class="h5 mt-2">Hortifruti</h3>
+                <p class="text-muted mb-0">Frutas frescas selecionadas diariamente.</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="card shadow-sm mt-5 p-4">
+        <h2 class="h5"><i class="bi bi-shield-check text-success me-2"></i>Como funciona o acesso</h2>
+        <div class="row mt-2">
+            <div class="col-md-6">
+                <span class="badge badge-role-cliente mb-2"><i class="bi bi-person me-1"></i>CLIENTE</span>
+                <p class="mb-0 text-muted">Crie sua conta pela tela de cadastro e consulte o catálogo
+                    e os detalhes de cada produto.</p>
+            </div>
+            <div class="col-md-6">
+                <span class="badge badge-role-admin mb-2"><i class="bi bi-person-gear me-1"></i>ADMIN</span>
+                <p class="mb-0 text-muted">Gerentes do mercado: cadastram, editam e excluem produtos
+                    e acompanham os usuários pelo painel administrativo.</p>
+            </div>
+        </div>
+    </div>
+</main>
+
+<footer class="text-center text-muted small pb-4">
+    Mercado Express &middot; CP5 TDS FIAP &middot; Spring Security MVC
+</footer>
+
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>

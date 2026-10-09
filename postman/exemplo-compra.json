@@ -1,0 +1,9 @@
+{
+  "clienteNome": "Professor Marcel",
+  "clienteEmail": "professor@exemplo.com",
+  "formaPagamento": "PIX",
+  "itens": [
+    { "produtoId": 1, "quantidade": 2 },
+    { "produtoId": 5, "quantidade": 3 }
+  ]
+}

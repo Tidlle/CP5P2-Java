@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:fragment="head(titulo)">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title th:text="${titulo} + ' | Mercado Express'">Mercado Express</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons e fonte Poppins instalados via WebJars (pom.xml) -->
+    <link th:href="@{/webjars/bootstrap-icons/1.13.1/font/bootstrap-icons.min.css}" rel="stylesheet">
+    <link th:href="@{/webjars/font-awesome/7.3.0/css/fontawesome.min.css}" rel="stylesheet">
+    <link th:href="@{/webjars/font-awesome/7.3.0/css/solid.min.css}" rel="stylesheet">
+    <link th:href="@{/webjars/fontsource__poppins/4.5.1/400.css}" rel="stylesheet">
+    <link th:href="@{/webjars/fontsource__poppins/4.5.1/500.css}" rel="stylesheet">
+    <link th:href="@{/webjars/fontsource__poppins/4.5.1/600.css}" rel="stylesheet">
+    <link th:href="@{/webjars/fontsource__poppins/4.5.1/700.css}" rel="stylesheet">
+    <link th:href="@{/css/style.css}" rel="stylesheet">
+</head>
+<body>
+
+<nav th:fragment="nav" class="navbar navbar-expand-lg navbar-dark mx-navbar mb-4">
+    <div class="container">
+        <a class="navbar-brand fw-bold" th:href="@{/}"><i class="bi bi-basket2-fill me-1"></i> Mercado <span>Express</span></a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#menu">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="menu">
+            <ul class="navbar-nav me-auto">
+                <li class="nav-item" sec:authorize="isAuthenticated()">
+                    <a class="nav-link" th:href="@{/mercado}"><i class="bi bi-grid-3x3-gap me-1"></i>Produtos</a>
+                </li>
+                <li class="nav-item" sec:authorize="isAuthenticated()">
+                    <a class="nav-link" th:href="@{/pedidos}"><i class="bi bi-receipt me-1"></i>Compras</a>
+                </li>
+                <li class="nav-item" sec:authorize="hasRole('ADMIN')">
+                    <a class="nav-link" th:href="@{/admin}"><i class="bi bi-people me-1"></i>Admin</a>
+                </li>
+                <li class="nav-item" sec:authorize="hasRole('ADMIN')">
+                    <a class="nav-link" th:href="@{/admin/dashboard}"><i class="bi bi-bar-chart-line me-1"></i>Dashboard</a>
+                </li>
+            </ul>
+            <div class="d-flex align-items-center gap-2">
+                <a sec:authorize="isAuthenticated()" th:href="@{/carrinho}" class="btn btn-mx-laranja btn-sm" title="Carrinho">
+                    <i class="bi bi-cart3 me-1"></i>Carrinho
+                    <span class="badge rounded-pill bg-light text-dark ms-1" th:text="${qtdCarrinho ?: 0}">0</span>
+                </a>
+                <span class="text-light small" sec:authorize="isAuthenticated()">
+                    <i class="bi bi-person-circle me-1"></i><span sec:authentication="name">usuario</span>
+                    <span class="badge badge-role-admin ms-1" sec:authorize="hasRole('ADMIN')">ADMIN</span>
+                    <span class="badge bg-light text-success ms-1" sec:authorize="hasRole('CLIENTE')">CLIENTE</span>
+                </span>
+                <form sec:authorize="isAuthenticated()" th:action="@{/logout}" method="post" class="d-inline m-0">
+                    <button type="submit" class="btn btn-outline-light btn-sm"><i class="bi bi-box-arrow-right me-1"></i>Sair</button>
+                </form>
+                <a sec:authorize="isAnonymous()" class="btn btn-outline-light btn-sm" th:href="@{/login}"><i class="bi bi-box-arrow-in-right me-1"></i>Entrar</a>
+                <a sec:authorize="isAnonymous()" class="btn btn-mx-laranja btn-sm" th:href="@{/cadastro}"><i class="bi bi-person-plus me-1"></i>Criar conta</a>
+            </div>
+        </div>
+    </div>
+</nav>
+
+<!-- Mensagens de sucesso/erro (flash attributes) -->
+<th:block th:fragment="alertas">
+    <div class="alert alert-success" th:if="${sucesso}"><i class="bi bi-check-circle-fill me-1"></i><span th:text="${sucesso}"></span></div>
+    <div class="alert alert-danger" th:if="${erro}"><i class="bi bi-exclamation-triangle-fill me-1"></i><span th:text="${erro}"></span></div>
+</th:block>
+
+<!-- Badge de status do pedido (icone + texto: o status nunca e indicado so pela cor) -->
+<span th:fragment="statusPedido(status)" class="badge status-pedido" th:classappend="${'status-' + status}">
+    <th:block th:switch="${status.name()}">
+        <th:block th:case="'PAGO'"><i class="bi bi-check-circle-fill me-1"></i>Pago</th:block>
+        <th:block th:case="'AGUARDANDO_PAGAMENTO'"><i class="bi bi-hourglass-split me-1"></i>Aguardando pagamento</th:block>
+        <th:block th:case="'RECUSADO'"><i class="bi bi-x-circle-fill me-1"></i>Recusado</th:block>
+        <th:block th:case="*"><i class="bi bi-exclamation-octagon-fill me-1"></i>Erro de comunicação</th:block>
+    </th:block>
+</span>
+
+<th:block th:fragment="scripts">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</th:block>
+
+</body>
+</html>

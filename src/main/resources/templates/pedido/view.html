@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{fragments/layout :: head('Pedido ' + ${codigoCurto})}"></head>
+<body>
+
+<div th:replace="~{fragments/layout :: nav}"></div>
+
+<div class="container pb-5">
+
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+        <div>
+            <h1 class="h3 mb-0"><i class="bi bi-bag-check text-success me-2"></i>Pedido <span class="font-monospace" th:text="${codigoCurto}"></span></h1>
+            <p class="text-muted small mb-0">Código completo: <span class="font-monospace" th:text="${pedido.codigo}"></span></p>
+        </div>
+        <span class="fs-5" th:insert="~{fragments/layout :: statusPedido(${pedido.status})}"></span>
+    </div>
+
+    <div th:replace="~{fragments/layout :: alertas}"></div>
+
+    <!-- Linha do tempo da integracao -->
+    <div class="card shadow-sm mb-4">
+        <div class="card-body">
+            <ol class="fluxo">
+                <li class="feito">
+                    <i class="bi bi-cart-check"></i>
+                    <div><strong>Compra finalizada</strong>
+                        <div class="small text-muted" th:text="${#temporals.format(pedido.dataCriacao, 'dd/MM/yyyy HH:mm:ss')}"></div></div>
+                </li>
+                <li th:classappend="${pedido.status.name() == 'ERRO_COMUNICACAO'} ? 'erro' : 'feito'">
+                    <i class="bi bi-send"></i>
+                    <div><strong>Enviada ao Banco Tranquilo</strong>
+                        <div class="small text-muted">fila <code>banco.tranquilo.pagamentos</code></div></div>
+                </li>
+                <li th:classappend="${pedido.status.name() == 'PAGO'} ? 'feito' : (${pedido.status.name() == 'AGUARDANDO_PAGAMENTO'} ? 'atual' : 'erro')">
+                    <i class="bi bi-bank"></i>
+                    <div><strong th:text="${pedido.status.name() == 'AGUARDANDO_PAGAMENTO'} ? 'Aguardando o banco…' : 'Resposta do banco'">Resposta do banco</strong>
+                        <div class="small text-muted" th:if="${pedido.mensagemBanco}" th:text="${pedido.mensagemBanco}"></div></div>
+                </li>
+                <li th:classappend="${!#lists.isEmpty(emails) and emails[0].status.name() == 'ENVIADO'} ? 'feito' : (${!#lists.isEmpty(emails)} ? 'erro' : '')">
+                    <i class="bi bi-envelope-check"></i>
+                    <div><strong>E-mail de confirmação</strong>
+                        <div class="small text-muted" th:if="${#lists.isEmpty(emails)}" th:text="${pedido.status.name() == 'PAGO'} ? 'na fila de envio' : 'enviado após a aprovação'"></div>
+                        <div class="small text-muted" th:unless="${#lists.isEmpty(emails)}" th:text="${emails[0].destinatario}"></div></div>
+                </li>
+            </ol>
+            <p class="small text-muted mb-0" th:if="${pedido.status.name() == 'AGUARDANDO_PAGAMENTO'}">
+                <span class="spinner-border spinner-border-sm text-success me-1"></span>Esta página é atualizada automaticamente.
+            </p>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-lg-8">
+            <div class="card shadow-sm">
+                <div class="card-header bg-white fw-semibold"><i class="bi bi-list-ul me-2"></i>Itens</div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table align-middle mb-0">
+                            <thead class="table-light">
+                            <tr><th>Produto</th><th class="text-end">Qtd.</th><th class="text-end">Preço</th><th class="text-end">Subtotal</th></tr>
+                            </thead>
+                            <tbody>
+                            <tr th:each="i : ${pedido.itens}">
+                                <td th:text="${i.produtoNome}"></td>
+                                <td class="text-end" th:text="${i.quantidade}"></td>
+                                <td class="text-end text-nowrap" th:text="${'R$ ' + #numbers.formatDecimal(i.precoUnitario, 1, 'POINT', 2, 'COMMA')}"></td>
+                                <td class="text-end text-nowrap" th:text="${'R$ ' + #numbers.formatDecimal(i.subtotal, 1, 'POINT', 2, 'COMMA')}"></td>
+                            </tr>
+                            </tbody>
+                            <tfoot>
+                            <tr class="fw-bold">
+                                <td colspan="3" class="text-end">Total</td>
+                                <td class="text-end text-nowrap text-success" th:text="${'R$ ' + #numbers.formatDecimal(pedido.valorTotal, 1, 'POINT', 2, 'COMMA')}"></td>
+                            </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card shadow-sm mb-4">
+                <div class="card-body">
+                    <h2 class="h6 fw-semibold mb-3"><i class="bi bi-info-circle me-2"></i>Dados da compra</h2>
+                    <dl class="row small mb-0">
+                        <dt class="col-5">Cliente</dt><dd class="col-7" th:text="${pedido.clienteNome}"></dd>
+                        <dt class="col-5">E-mail</dt><dd class="col-7 text-break" th:text="${pedido.clienteEmail}"></dd>
+                        <dt class="col-5">Pagamento</dt><dd class="col-7" th:text="${pedido.formaPagamento.descricao}"></dd>
+                        <dt class="col-5">Canal</dt><dd class="col-7" th:text="${pedido.origem}"></dd>
+                        <dt class="col-5">Transação</dt><dd class="col-7 font-monospace text-break" th:text="${pedido.transacaoId ?: '-'}"></dd>
+                        <dt class="col-5">Respondido</dt><dd class="col-7" th:text="${pedido.dataResposta != null} ? ${#temporals.format(pedido.dataResposta, 'dd/MM/yyyy HH:mm:ss')} : '-'"></dd>
+                    </dl>
+                </div>
+            </div>
+
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h2 class="h6 fw-semibold mb-3"><i class="bi bi-envelope me-2"></i>E-mails (TDS_Mercado_Email)</h2>
+                    <p class="small text-muted mb-0" th:if="${#lists.isEmpty(emails)}">Nenhum e-mail registrado.</p>
+                    <ul class="list-unstyled small mb-0">
+                        <li th:each="e : ${emails}" class="mb-2">
+                            <span class="badge" th:classappend="${e.status.name() == 'ENVIADO'} ? 'status-PAGO' : 'status-RECUSADO'">
+                                <i class="bi" th:classappend="${e.status.name() == 'ENVIADO'} ? 'bi-check-lg' : 'bi-x-lg'"></i>
+                                <span th:text="${e.status}"></span>
+                            </span>
+                            <span th:text="${#temporals.format(e.dataEnvio, 'dd/MM HH:mm:ss')}"></span>
+                            <div class="text-danger text-break" th:if="${e.erro}" th:text="${e.erro}"></div>
+                        </li>
+                    </ul>
+                    <form sec:authorize="hasRole('ADMIN')" th:if="${pedido.status.name() == 'PAGO'}"
+                          th:action="@{/admin/pedidos/{c}/reenviar-email(c=${pedido.codigo})}" method="post" class="mt-3">
+                        <button type="submit" class="btn btn-sm btn-outline-success"><i class="bi bi-arrow-clockwise me-1"></i>Reenviar e-mail</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <a th:href="@{/pedidos}" class="btn btn-secondary mt-4"><i class="bi bi-arrow-left me-1"></i>Minhas compras</a>
+    <a sec:authorize="hasRole('ADMIN')" th:href="@{/admin/pedidos}" class="btn btn-outline-secondary mt-4"><i class="bi bi-list-check me-1"></i>Todos os pedidos</a>
+
+</div>
+
+<!-- Enquanto o banco nao responde, recarrega a pagina a cada 2 segundos -->
+<script th:if="${pedido.status.name() == 'AGUARDANDO_PAGAMENTO' or (pedido.status.name() == 'PAGO' and #lists.isEmpty(emails))}">
+    setTimeout(function () { window.location.reload(); }, 2000);
+</script>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>

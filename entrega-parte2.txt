@@ -1,0 +1,65 @@
+CP5 - Parte 2 (Microsservicos com RabbitMQ - Spring de Mensageria com API e e-mail) - TDS FIAP
+Professor: Dr. Marcel Stefan Wagner
+Turma: [TODO - preencher]
+
+Integrantes do grupo:
+- Nome: Eduardo Martins | RM: 562259
+- Nome: João Victor Alcantara | RM: 562707
+
+Link do GitHub (README com a descricao completa do projeto): https://github.com/Tidlle/CP5P2-Java
+Video (YouTube, nao listado): [TODO - preencher]
+
+IDE utilizada: IntelliJ IDEA
+
+----------------------------------------------------------------
+Aplicacoes
+----------------------------------------------------------------
+- Mercado Express (pasta raiz)              -> http://localhost:8080
+- Banco Tranquilo (pasta banco-tranquilo/)  -> http://localhost:8081
+- Broker: RabbitMQ 3.13 (painel http://localhost:15672, guest/guest)
+- E-mail local: Mailpit (caixa de entrada http://localhost:8025)
+Subir a infraestrutura: docker compose up -d
+
+----------------------------------------------------------------
+Configuracao do Banco de Dados (PostgreSQL - o mesmo da Parte 1)
+----------------------------------------------------------------
+SGBD ............ PostgreSQL 16
+Host/porta ...... localhost:5433
+Banco ........... mercado_express
+Usuario/senha ... postgres / postgres
+URL JDBC ........ jdbc:postgresql://localhost:5433/mercado_express
+Arquivo ......... src/main/resources/application.yml (variaveis DB_URL ou DB_HOST/DB_PORT/DB_NAME, DB_USERNAME, DB_PASSWORD)
+
+Tabelas (criadas automaticamente pelo Hibernate, ddl-auto: update):
+- TDS_Sec_MVC_TB_Mercado ........ produtos (Parte 1 + coluna custo)
+- TDS_Users_Mercado ............. usuarios (Parte 1)
+- TDS_Mercado_Pedido ............ compras e status do pagamento
+- TDS_Mercado_Item_Pedido ....... itens de cada compra
+- TDS_Mercado_Email ............. controle dos e-mails enviados aos clientes
+- TDS_Banco_Tranquilo_Transacao . transacoes do microsservico Banco Tranquilo
+
+Usuario ADMIN padrao: admin@mercado.com / admin123
+
+----------------------------------------------------------------
+Exemplo de requisicao de compra (Postman / Insomnia)
+----------------------------------------------------------------
+POST http://localhost:8080/api/compras
+Authorization: Basic Auth -> usuario admin@mercado.com, senha admin123
+Content-Type: application/json
+
+{
+  "clienteNome": "Professor Marcel",
+  "clienteEmail": "professor@exemplo.com",
+  "formaPagamento": "PIX",
+  "itens": [
+    { "produtoId": 1, "quantidade": 2 },
+    { "produtoId": 5, "quantidade": 3 }
+  ]
+}
+
+Resposta: 202 Accepted com "status": "AGUARDANDO_PAGAMENTO" e o "codigo" do pedido.
+Depois de ~2 s: GET http://localhost:8080/api/compras/{codigo} -> "status": "PAGO" (e o e-mail e enviado).
+Compras acima de R$ 1.000,00 sao recusadas pelo Banco Tranquilo (limite).
+
+Colecao completa com scripts de teste: postman/MercadoExpress-BancoTranquilo.postman_collection.json
+Exemplo isolado: postman/exemplo-compra.json

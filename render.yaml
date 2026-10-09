@@ -1,0 +1,39 @@
+# Blueprint do Render: cria o banco PostgreSQL e o Web Service (Docker) de uma vez.
+# Render Dashboard -> New -> Blueprint -> selecione este repositorio.
+databases:
+  - name: mercado-express-db
+    plan: free
+    databaseName: mercado_express
+    user: mercado
+
+services:
+  - type: web
+    name: cp5p1-java
+    runtime: docker
+    plan: free
+    healthCheckPath: /
+    envVars:
+      - key: DB_HOST
+        fromDatabase:
+          name: mercado-express-db
+          property: host
+      - key: DB_PORT
+        fromDatabase:
+          name: mercado-express-db
+          property: port
+      - key: DB_NAME
+        fromDatabase:
+          name: mercado-express-db
+          property: database
+      - key: DB_USERNAME
+        fromDatabase:
+          name: mercado-express-db
+          property: user
+      - key: DB_PASSWORD
+        fromDatabase:
+          name: mercado-express-db
+          property: password
+      - key: ADMIN_EMAIL
+        value: admin@mercado.com
+      - key: ADMIN_SENHA
+        sync: false

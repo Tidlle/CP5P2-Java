@@ -1,0 +1,99 @@
+# ==========================================================
+# CP5 Partes 1 e 2 - TDS FIAP - Mercado Express
+# Parte 1: Spring Security MVC + PostgreSQL
+# Parte 2: RabbitMQ (Banco Tranquilo) + e-mail de confirmacao + dashboard
+# ==========================================================
+# Todas as configuracoes sensiveis vem de variaveis de ambiente.
+# Os valores apos ":" sao apenas fallback para rodar localmente.
+
+server:
+  port: ${PORT:8080}
+
+spring:
+  application:
+    name: mercado-express-security
+
+  # Aceita a URL JDBC completa (DB_URL) ou as partes separadas (DB_HOST/DB_PORT/DB_NAME),
+  # que e o formato fornecido pelo blueprint do Render (render.yaml).
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5433}/${DB_NAME:mercado_express}}
+    username: ${DB_USERNAME:postgres}
+    password: ${DB_PASSWORD:postgres}
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: 5
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    open-in-view: false
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: true
+
+  thymeleaf:
+    cache: false
+
+  # ---------- Parte 2: RabbitMQ / LavinMQ ----------
+  # Local: docker compose up -d (painel em http://localhost:15672, guest/guest).
+  # Nuvem (CloudAMQP / LavinMQ): defina RABBITMQ_ADDRESSES=amqps://usuario:senha@host/vhost
+  rabbitmq:
+    addresses: ${RABBITMQ_ADDRESSES:amqp://${RABBITMQ_USERNAME:guest}:${RABBITMQ_PASSWORD:guest}@${RABBITMQ_HOST:localhost}:${RABBITMQ_PORT:5672}}
+    listener:
+      simple:
+        # Ate 3 tentativas por mensagem; depois disso ela vai para a fila de mensagens mortas (DLQ)
+        retry:
+          enabled: true
+          max-attempts: 3
+          initial-interval: 1s
+        default-requeue-rejected: false
+
+  # ---------- Parte 2: envio de e-mail ----------
+  # Local: Mailpit do docker-compose (caixa de entrada em http://localhost:8025).
+  # Gmail: MAIL_HOST=smtp.gmail.com, MAIL_PORT=587, MAIL_USERNAME, MAIL_PASSWORD (senha de app),
+  #        MAIL_SMTP_AUTH=true, MAIL_STARTTLS=true
+  mail:
+    host: ${MAIL_HOST:localhost}
+    port: ${MAIL_PORT:1025}
+    username: ${MAIL_USERNAME:}
+    password: ${MAIL_PASSWORD:}
+    default-encoding: UTF-8
+    properties:
+      mail:
+        smtp:
+          auth: ${MAIL_SMTP_AUTH:false}
+          starttls:
+            enable: ${MAIL_STARTTLS:false}
+          connectiontimeout: 5000
+          timeout: 5000
+          writetimeout: 5000
+
+  # Cache de arquivos estaticos (CSS, icones, fontes). Sem isso o Spring Security envia
+  # "no-store" e o navegador baixa a fonte de icones de novo a cada pagina.
+  # O versionamento por conteudo coloca um hash na URL (ex.: style-3f2a...css),
+  # entao uma alteracao no arquivo gera uma URL nova e o cache nunca fica desatualizado.
+  web:
+    resources:
+      cache:
+        cachecontrol:
+          max-age: 365d
+          cache-public: true
+      chain:
+        strategy:
+          content:
+            enabled: true
+            paths: /**
+
+# Usuario ADMIN criado automaticamente na primeira execucao
+# (o cadastro publico /cadastro cria somente usuarios CLIENTE)
+app:
+  admin:
+    nome: ${ADMIN_NOME:Administrador}
+    email: ${ADMIN_EMAIL:admin@mercado.com}
+    senha: ${ADMIN_SENHA:admin123}
+  seed-produtos: ${SEED_PRODUTOS:true}
+  # Historico de compras de exemplo (origem SEED) para o dashboard nao comecar vazio
+  seed-pedidos: ${SEED_PEDIDOS:true}
+  mail:
+    remetente: ${MAIL_FROM:Mercado Express <nao-responda@mercadoexpress.com>}

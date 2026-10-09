@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Entrar')}"></head>
+<body>
+
+<div class="container-fluid">
+    <div class="row auth-wrapper">
+
+        <!-- Lado esquerdo: identidade visual -->
+        <div class="col-lg-5 auth-lado d-none d-lg-flex flex-column justify-content-center p-5">
+            <a th:href="@{/}" class="text-white text-decoration-none fs-4 fw-bold mb-5"><i class="bi bi-basket2-fill me-2"></i>Mercado Express</a>
+            <h2 class="display-6 fw-bold">Bem-vindo de <span>volta!</span></h2>
+            <p class="lead mt-3">Entre com seu e-mail e senha para acessar o catálogo de produtos
+                ou o painel administrativo.</p>
+            <ul class="list-unstyled mt-4 opacity-75">
+                <li class="mb-2"><i class="bi bi-check-circle-fill me-2"></i>Catálogo completo de produtos</li>
+                <li class="mb-2"><i class="bi bi-check-circle-fill me-2"></i>Busca por nome</li>
+                <li class="mb-2"><i class="bi bi-check-circle-fill me-2"></i>Área restrita por perfil de acesso</li>
+            </ul>
+        </div>
+
+        <!-- Lado direito: formulario -->
+        <div class="col-lg-7 d-flex align-items-center justify-content-center p-4">
+            <div class="auth-form">
+                <a th:href="@{/}" class="d-lg-none text-success text-decoration-none fw-bold fs-5"><i class="bi bi-basket2-fill me-1"></i>Mercado Express</a>
+                <h1 class="h3 fw-bold mt-3 mb-1">Entrar</h1>
+                <p class="text-muted mb-4">Acesse sua conta do Mercado Express</p>
+
+                <div class="alert alert-danger" th:if="${param.error}">
+                    <i class="bi bi-exclamation-triangle-fill me-1"></i>
+                    E-mail ou senha inválidos.
+                </div>
+                <div class="alert alert-info" th:if="${param.logout}">
+                    <i class="bi bi-info-circle-fill me-1"></i>
+                    Você saiu da sua conta.
+                </div>
+                <div class="alert alert-success" th:if="${param.cadastrado}">
+                    <i class="bi bi-check-circle-fill me-1"></i>
+                    Conta criada com sucesso! Faça login para continuar.
+                </div>
+
+                <form th:action="@{/login}" method="post" id="form-login">
+                    <div class="mb-3">
+                        <label for="email" class="form-label">E-mail</label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="bi bi-envelope"></i></span>
+                            <input type="email" id="email" name="email" class="form-control"
+                                   placeholder="voce@email.com" th:value="${emailCadastrado}" required autofocus>
+                        </div>
+                    </div>
+                    <div class="mb-4">
+                        <label for="senha" class="form-label">Senha</label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="bi bi-lock"></i></span>
+                            <input type="password" id="senha" name="senha" class="form-control"
+                                   placeholder="Sua senha" required>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-mx w-100 py-2 fw-semibold"><i class="bi bi-box-arrow-in-right me-2"></i>Entrar</button>
+                </form>
+
+                <p class="text-center mt-4 mb-1">
+                    Ainda não tem conta?
+                    <a th:href="@{/cadastro}" class="fw-semibold text-success">Cadastre-se</a>
+                </p>
+                <p class="text-center small text-muted">
+                    Se o e-mail informado não estiver cadastrado, você será levado para a tela de cadastro.
+                </p>
+                <p class="text-center mt-3">
+                    <a th:href="@{/}" class="text-muted small">&larr; Voltar para o início</a>
+                </p>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+</body>
+</html>

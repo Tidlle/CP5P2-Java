@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{fragments/layout :: head(${mercado.nome})}"></head>
+<body>
+
+<div th:replace="~{fragments/layout :: nav}"></div>
+
+<div class="container pb-5">
+    <div th:replace="~{fragments/layout :: alertas}"></div>
+    <div class="card shadow-sm" style="max-width: 560px;">
+        <div class="card-body">
+            <span class="badge badge-role-cliente mb-2"><i class="bi bi-tag me-1"></i><span th:text="${mercado.setor}">Setor</span></span>
+            <h1 class="h4 mb-3"><i class="bi bi-box-seam text-success me-2"></i><span th:text="${mercado.nome}"></span></h1>
+            <dl class="row mb-0">
+                <dt class="col-sm-4">Id</dt>
+                <dd class="col-sm-8" th:text="${mercado.id}"></dd>
+
+                <dt class="col-sm-4">Tipo</dt>
+                <dd class="col-sm-8" th:text="${mercado.tipo}"></dd>
+
+                <dt class="col-sm-4">Setor</dt>
+                <dd class="col-sm-8" th:text="${mercado.setor}"></dd>
+
+                <dt class="col-sm-4">Tamanho</dt>
+                <dd class="col-sm-8" th:text="${#numbers.formatDecimal(mercado.tamanho, 1, 'POINT', 2, 'COMMA')}"></dd>
+
+                <dt class="col-sm-4">Preço</dt>
+                <dd class="col-sm-8" th:text="${'R$ ' + #numbers.formatDecimal(mercado.preco, 1, 'POINT', 2, 'COMMA')}"></dd>
+
+                <th:block sec:authorize="hasRole('ADMIN')">
+                    <dt class="col-sm-4">Custo</dt>
+                    <dd class="col-sm-8" th:text="${mercado.custo != null} ? ${'R$ ' + #numbers.formatDecimal(mercado.custo, 1, 'POINT', 2, 'COMMA')} : '-'"></dd>
+                </th:block>
+
+                <dt class="col-sm-4">Estoque</dt>
+                <dd class="col-sm-8" th:text="${mercado.estoque} + ' unidade(s)'"></dd>
+            </dl>
+
+            <form th:action="@{/carrinho/adicionar}" method="post" class="d-flex gap-2 mt-3" th:if="${mercado.estoque > 0}">
+                <input type="hidden" name="produtoId" th:value="${mercado.id}">
+                <input type="hidden" name="voltarPara" th:value="'/mercado/' + ${mercado.id}">
+                <input type="number" name="quantidade" value="1" min="1" th:max="${mercado.estoque}" class="form-control qtd-input-lg" aria-label="Quantidade">
+                <button type="submit" class="btn btn-mx"><i class="bi bi-cart-plus me-1"></i>Adicionar ao carrinho</button>
+            </form>
+            <p class="text-danger mt-3 mb-0" th:if="${mercado.estoque < 1}"><i class="bi bi-x-circle me-1"></i>Produto esgotado</p>
+        </div>
+        <div class="card-footer bg-white d-flex justify-content-between">
+            <a th:href="@{/mercado}" class="btn btn-secondary"><i class="bi bi-arrow-left me-1"></i>Voltar</a>
+            <div sec:authorize="hasRole('ADMIN')">
+                <a th:href="@{/mercado/{id}/editar(id=${mercado.id})}" class="btn btn-warning"><i class="bi bi-pencil-square me-1"></i>Editar</a>
+                <form th:action="@{/mercado/{id}/excluir(id=${mercado.id})}" method="post" class="d-inline"
+                      onsubmit="return confirm('Confirma a exclusão deste produto?');">
+                    <button type="submit" class="btn btn-danger"><i class="bi bi-trash me-1"></i>Excluir</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>

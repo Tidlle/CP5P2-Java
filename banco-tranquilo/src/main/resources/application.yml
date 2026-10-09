@@ -1,0 +1,41 @@
+# ==========================================================
+# CP5 Parte 2 - TDS FIAP - Banco Tranquilo (microsservico)
+# ==========================================================
+# Consome a fila banco.tranquilo.pagamentos, decide se aprova a compra
+# e responde ao Mercado Express pela exchange mercado.express.exchange.
+
+server:
+  port: ${PORT:8081}
+
+spring:
+  application:
+    name: banco-tranquilo
+
+  # Mesmo PostgreSQL da Parte 1; o banco guarda as transacoes na tabela TDS_Banco_Tranquilo_Transacao
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5433}/${DB_NAME:mercado_express}}
+    username: ${DB_USERNAME:postgres}
+    password: ${DB_PASSWORD:postgres}
+    hikari:
+      maximum-pool-size: 3
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    open-in-view: false
+
+  rabbitmq:
+    addresses: ${RABBITMQ_ADDRESSES:amqp://${RABBITMQ_USERNAME:guest}:${RABBITMQ_PASSWORD:guest}@${RABBITMQ_HOST:localhost}:${RABBITMQ_PORT:5672}}
+    listener:
+      simple:
+        retry:
+          enabled: true
+          max-attempts: 3
+          initial-interval: 1s
+        default-requeue-rejected: false
+
+banco:
+  # Compras acima deste valor sao recusadas por "limite insuficiente"
+  limite-aprovacao: ${BANCO_LIMITE:1000.00}
+  # Tempo simulado de analise antifraude (deixa a mensagem visivel no painel do RabbitMQ)
+  tempo-analise-ms: ${BANCO_TEMPO_ANALISE_MS:1500}

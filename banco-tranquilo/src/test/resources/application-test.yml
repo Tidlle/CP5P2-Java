@@ -1,0 +1,17 @@
+spring:
+  datasource:
+    url: jdbc:h2:mem:banco_test;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE;DB_CLOSE_DELAY=-1
+    username: sa
+    password:
+    driver-class-name: org.h2.Driver
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+  rabbitmq:
+    listener:
+      simple:
+        auto-startup: false
+
+banco:
+  limite-aprovacao: 1000.00
+  tempo-analise-ms: 0

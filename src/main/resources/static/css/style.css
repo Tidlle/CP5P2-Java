@@ -1,0 +1,333 @@
+/* Mercado Express - identidade visual */
+:root {
+    --mx-verde: #1f7a4d;
+    --mx-verde-escuro: #155c39;
+    --mx-laranja: #f2994a;
+    --mx-creme: #fbf7ef;
+    --mx-texto: #22312a;
+}
+
+body {
+    background: var(--mx-creme);
+    color: var(--mx-texto);
+    /* Poppins instalada via WebJar (fontsource__poppins) */
+    font-family: "Poppins", "Segoe UI", system-ui, -apple-system, sans-serif;
+}
+
+h1, h2, h3, .navbar-brand {
+    letter-spacing: -.01em;
+}
+
+/* Bootstrap Icons alinhados ao texto */
+.bi {
+    vertical-align: -.125em;
+}
+
+.input-group-text {
+    background: #fff;
+    color: var(--mx-verde);
+    border-radius: 10px 0 0 10px;
+}
+
+.hero-icone {
+    font-size: 9rem;
+    color: rgba(255, 255, 255, .85);
+    line-height: 1;
+}
+
+.erro-icone {
+    font-size: 5rem;
+    color: #dc3545;
+}
+
+.mx-navbar {
+    background: var(--mx-verde);
+}
+
+.mx-navbar .nav-link,
+.mx-navbar .btn,
+.mx-navbar .text-light {
+    white-space: nowrap;
+}
+
+.mx-navbar .navbar-brand span {
+    color: var(--mx-laranja);
+}
+
+.btn-mx {
+    background: var(--mx-verde);
+    border-color: var(--mx-verde);
+    color: #fff;
+}
+
+.btn-mx:hover, .btn-mx:focus {
+    background: var(--mx-verde-escuro);
+    border-color: var(--mx-verde-escuro);
+    color: #fff;
+}
+
+.btn-mx-laranja {
+    background: var(--mx-laranja);
+    border-color: var(--mx-laranja);
+    color: #fff;
+}
+
+.btn-mx-laranja:hover {
+    background: #d97f32;
+    border-color: #d97f32;
+    color: #fff;
+}
+
+.card {
+    border: none;
+    border-radius: 14px;
+}
+
+/* ---------- Landing page ---------- */
+.hero {
+    background: linear-gradient(135deg, var(--mx-verde) 0%, var(--mx-verde-escuro) 100%);
+    color: #fff;
+    padding: 5rem 0 6rem;
+    border-bottom-left-radius: 40px;
+    border-bottom-right-radius: 40px;
+}
+
+.hero h1 span {
+    color: var(--mx-laranja);
+}
+
+.setor-card {
+    transition: transform .15s ease, box-shadow .15s ease;
+}
+
+.setor-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 10px 24px rgba(0, 0, 0, .08);
+}
+
+.setor-icone {
+    width: 72px;
+    height: 72px;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2rem;
+    border-radius: 50%;
+    background: rgba(31, 122, 77, .1);
+    color: var(--mx-verde);
+}
+
+.setor-card:hover .setor-icone {
+    background: var(--mx-verde);
+    color: #fff;
+}
+
+/* ---------- Telas de autenticacao (login / cadastro) ---------- */
+.auth-wrapper {
+    min-height: 100vh;
+}
+
+.auth-lado {
+    background: linear-gradient(160deg, var(--mx-verde) 0%, var(--mx-verde-escuro) 100%);
+    color: #fff;
+}
+
+.auth-lado h2 span {
+    color: var(--mx-laranja);
+}
+
+.auth-form {
+    max-width: 420px;
+    width: 100%;
+}
+
+.auth-form .form-control {
+    padding: .7rem .9rem;
+    border-radius: 10px;
+}
+
+.auth-form .form-control:focus {
+    border-color: var(--mx-verde);
+    box-shadow: 0 0 0 .2rem rgba(31, 122, 77, .2);
+}
+
+.badge-role-admin {
+    background: var(--mx-laranja);
+}
+
+.badge-role-cliente {
+    background: var(--mx-verde);
+}
+
+.stat-card {
+    position: relative;
+    overflow: hidden;
+}
+
+.stat-card .stat-icone {
+    position: absolute;
+    right: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 2.6rem;
+    color: rgba(31, 122, 77, .18);
+}
+
+.stat-card .numero {
+    font-size: 2.2rem;
+    font-weight: 700;
+    color: var(--mx-verde);
+}
+
+/* ---------- Parte 2: carrinho, pedidos e dashboard ---------- */
+.qtd-input {
+    width: 4.2rem;
+}
+
+.qtd-input-lg {
+    width: 6rem;
+}
+
+/* Status do pedido: sempre icone + texto (a cor nunca e o unico sinal) */
+.status-pedido {
+    font-weight: 500;
+}
+
+.status-PAGO {
+    background: #e3f2ea;
+    color: #155c39;
+}
+
+.status-AGUARDANDO_PAGAMENTO {
+    background: #fff3d6;
+    color: #7a5200;
+}
+
+.status-RECUSADO,
+.status-ERRO_COMUNICACAO {
+    background: #fbe4e2;
+    color: #9b2c22;
+}
+
+/* Linha do tempo da integracao Mercado -> Banco Tranquilo -> e-mail */
+.fluxo {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 .75rem;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1rem;
+}
+
+.fluxo li {
+    display: flex;
+    gap: .6rem;
+    align-items: flex-start;
+    color: #8a8a85;
+}
+
+.fluxo li > .bi {
+    flex: 0 0 auto;
+    width: 2.2rem;
+    height: 2.2rem;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #efede7;
+}
+
+.fluxo li.feito {
+    color: var(--mx-texto);
+}
+
+.fluxo li.feito > .bi {
+    background: var(--mx-verde);
+    color: #fff;
+}
+
+.fluxo li.atual {
+    color: var(--mx-texto);
+}
+
+.fluxo li.atual > .bi {
+    background: #fff3d6;
+    color: #7a5200;
+    animation: pulsar 1.2s ease-in-out infinite;
+}
+
+.fluxo li.erro > .bi {
+    background: #fbe4e2;
+    color: #9b2c22;
+}
+
+@keyframes pulsar {
+    50% { transform: scale(1.12); }
+}
+
+@media (max-width: 767.98px) {
+    .fluxo {
+        grid-template-columns: 1fr 1fr;
+    }
+}
+
+/* Dashboard */
+.kpi {
+    padding: 1rem 1.1rem;
+}
+
+.kpi-rotulo {
+    font-size: .8rem;
+    color: #6b6a66;
+}
+
+.kpi-valor {
+    font-size: 1.6rem;
+    font-weight: 700;
+    color: var(--mx-texto);
+    line-height: 1.3;
+    font-variant-numeric: tabular-nums;
+}
+
+.kpi-sub {
+    font-size: .8rem;
+    color: #6b6a66;
+}
+
+.grafico {
+    position: relative;
+    height: 240px;
+}
+
+.grafico-alto {
+    height: 280px;
+}
+
+.grafico-vazio {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: .4rem;
+    color: #8a8a85;
+}
+
+.grafico-vazio .bi {
+    font-size: 2rem;
+}
+
+.legenda-alerta {
+    display: inline-block;
+    width: .7rem;
+    height: .7rem;
+    border-radius: 2px;
+    background: #c0392b;
+    vertical-align: -.05em;
+}
+
+.dashboard details summary {
+    cursor: pointer;
+    color: var(--mx-verde);
+}

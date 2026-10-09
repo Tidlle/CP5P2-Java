@@ -1,0 +1,227 @@
+{
+  "info": {
+    "name": "CP5 Parte 2 - Mercado Express + Banco Tranquilo",
+    "description": "Testes da integracao Mercado Express -> RabbitMQ -> Banco Tranquilo -> e-mail.\n\n1. Suba a infraestrutura: docker compose up -d\n2. Rode o Mercado Express (porta 8080) e o Banco Tranquilo (porta 8081)\n3. Execute as requisicoes na ordem (ou use o Collection Runner).\n\nAutenticacao: HTTP Basic com os usuarios da tabela TDS_Users_Mercado (variaveis adminEmail/adminSenha).",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "basic",
+    "basic": [
+      { "key": "username", "value": "{{adminEmail}}", "type": "string" },
+      { "key": "password", "value": "{{adminSenha}}", "type": "string" }
+    ]
+  },
+  "variable": [
+    { "key": "mercadoUrl", "value": "http://localhost:8080" },
+    { "key": "bancoUrl", "value": "http://localhost:8081" },
+    { "key": "adminEmail", "value": "admin@mercado.com" },
+    { "key": "adminSenha", "value": "admin123" },
+    { "key": "emailDestino", "value": "professor@exemplo.com" },
+    { "key": "produtoId", "value": "1" },
+    { "key": "pedidoCodigo", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "1. Listar produtos (ids e estoque)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('200 OK', () => pm.response.to.have.status(200));",
+              "const produtos = pm.response.json();",
+              "pm.test('ha produtos cadastrados', () => pm.expect(produtos.length).to.be.above(0));",
+              "const comEstoque = produtos.find(p => p.estoque > 5);",
+              "if (comEstoque) { pm.collectionVariables.set('produtoId', comEstoque.id); }"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "url": "{{mercadoUrl}}/api/produtos"
+      }
+    },
+    {
+      "name": "2. Comprar (sera APROVADA pelo banco)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('202 Accepted', () => pm.response.to.have.status(202));",
+              "const pedido = pm.response.json();",
+              "pm.test('pedido aguardando o Banco Tranquilo', () => pm.expect(pedido.status).to.eql('AGUARDANDO_PAGAMENTO'));",
+              "pm.collectionVariables.set('pedidoCodigo', pedido.codigo);",
+              "console.log('Pedido criado:', pedido.codigo);"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"clienteNome\": \"Professor Marcel\",\n  \"clienteEmail\": \"{{emailDestino}}\",\n  \"formaPagamento\": \"PIX\",\n  \"itens\": [\n    { \"produtoId\": {{produtoId}}, \"quantidade\": 2 }\n  ]\n}"
+        },
+        "url": "{{mercadoUrl}}/api/compras"
+      }
+    },
+    {
+      "name": "3. Consultar o pedido (aguarde ~2 s: PAGO)",
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": ["// O Banco Tranquilo leva ~1,5 s para analisar a compra", "setTimeout(() => {}, 2500);"]
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('200 OK', () => pm.response.to.have.status(200));",
+              "const pedido = pm.response.json();",
+              "pm.test('pagamento aprovado pelo Banco Tranquilo', () => pm.expect(pedido.status).to.eql('PAGO'));",
+              "pm.test('tem id de transacao do banco', () => pm.expect(pedido.transacaoId).to.be.a('string'));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "url": "{{mercadoUrl}}/api/compras/{{pedidoCodigo}}"
+      }
+    },
+    {
+      "name": "4. Transacao no Banco Tranquilo",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('200 OK', () => pm.response.to.have.status(200));",
+              "pm.test('transacao APROVADA', () => pm.expect(pm.response.json().status).to.eql('APROVADO'));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "auth": { "type": "noauth" },
+        "method": "GET",
+        "url": "{{bancoUrl}}/api/transacoes/{{pedidoCodigo}}"
+      }
+    },
+    {
+      "name": "5. Comprar acima do limite (sera RECUSADA)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "if (pm.response.code === 202) {",
+              "  pm.collectionVariables.set('pedidoRecusado', pm.response.json().codigo);",
+              "  pm.test('202 Accepted', () => true);",
+              "} else {",
+              "  pm.test('sem estoque para testar o limite (422)', () => pm.response.to.have.status(422));",
+              "}"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"formaPagamento\": \"CARTAO_CREDITO\",\n  \"itens\": [\n    { \"produtoId\": 2, \"quantidade\": 30 }\n  ]\n}"
+        },
+        "url": "{{mercadoUrl}}/api/compras",
+        "description": "30 x Meia esportiva (R$ 34,90) = R$ 1.047,00, acima do limite de R$ 1.000,00 do Banco Tranquilo."
+      }
+    },
+    {
+      "name": "6. Consultar o pedido recusado (aguarde ~2 s)",
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": { "type": "text/javascript", "exec": ["setTimeout(() => {}, 2500);"] }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('pagamento RECUSADO por limite', () => {",
+              "  const p = pm.response.json();",
+              "  pm.expect(p.status).to.eql('RECUSADO');",
+              "  pm.expect(p.mensagemBanco).to.include('Limite');",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "url": "{{mercadoUrl}}/api/compras/{{pedidoRecusado}}"
+      }
+    },
+    {
+      "name": "7. Erro de validacao (sem estoque -> 422)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": ["pm.test('422 Unprocessable Entity', () => pm.response.to.have.status(422));"]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"formaPagamento\": \"PIX\",\n  \"itens\": [ { \"produtoId\": {{produtoId}}, \"quantidade\": 999 } ]\n}"
+        },
+        "url": "{{mercadoUrl}}/api/compras"
+      }
+    },
+    {
+      "name": "8. Sem credenciais (401)",
+      "event": [
+        {
+          "listen": "test",
+          "script": { "type": "text/javascript", "exec": ["pm.test('401 Unauthorized', () => pm.response.to.have.status(401));"] }
+        }
+      ],
+      "request": {
+        "auth": { "type": "noauth" },
+        "method": "GET",
+        "url": "{{mercadoUrl}}/api/compras"
+      }
+    },
+    {
+      "name": "9. Todas as compras (ADMIN)",
+      "request": {
+        "method": "GET",
+        "url": "{{mercadoUrl}}/api/compras"
+      }
+    },
+    {
+      "name": "10. Status do Banco Tranquilo",
+      "request": {
+        "auth": { "type": "noauth" },
+        "method": "GET",
+        "url": "{{bancoUrl}}/api/status"
+      }
+    }
+  ]
+}

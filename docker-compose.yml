@@ -1,0 +1,82 @@
+# Infraestrutura local do CP5 (Partes 1 e 2):  docker compose up -d
+#
+#   PostgreSQL ......... localhost:5433  (banco mercado_express, postgres/postgres)
+#   RabbitMQ ........... localhost:5672  | painel de gerenciamento: http://localhost:15672  (guest/guest)
+#   Mailpit (SMTP fake)  localhost:1025  | caixa de entrada:        http://localhost:8025
+#
+# As duas aplicacoes (Mercado Express e Banco Tranquilo) rodam pelo IntelliJ.
+# Para subir tudo em containers, inclusive as aplicacoes:
+#   docker compose --profile apps up -d --build
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: mercado-express-postgres
+    environment:
+      POSTGRES_DB: mercado_express
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5433:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d mercado_express"]
+      interval: 5s
+      retries: 10
+
+  rabbitmq:
+    image: rabbitmq:3.13-management
+    container_name: mercado-express-rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    volumes:
+      - rabbitdata:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 10s
+      retries: 10
+
+  mailpit:
+    image: axllent/mailpit:v1.21
+    container_name: mercado-express-mailpit
+    ports:
+      - "1025:1025"
+      - "8025:8025"
+
+  mercado-express:
+    profiles: ["apps"]
+    build: .
+    container_name: mercado-express-app
+    environment:
+      DB_HOST: postgres
+      DB_PORT: "5432"
+      RABBITMQ_HOST: rabbitmq
+      MAIL_HOST: mailpit
+    ports:
+      - "8080:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+
+  banco-tranquilo:
+    profiles: ["apps"]
+    build: ./banco-tranquilo
+    container_name: banco-tranquilo-app
+    environment:
+      DB_HOST: postgres
+      DB_PORT: "5432"
+      RABBITMQ_HOST: rabbitmq
+    ports:
+      - "8081:8081"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+
+volumes:
+  pgdata:
+  rabbitdata:

@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Dashboard da gerência')}"></head>
+<body>
+
+<div th:replace="~{fragments/layout :: nav}"></div>
+
+<div class="container pb-5 dashboard">
+
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+        <div>
+            <h1 class="h3 mb-0"><i class="bi bi-bar-chart-line text-success me-2"></i>Dashboard da gerência</h1>
+            <p class="text-muted mb-0 small">Faturamento e lucro consideram apenas pedidos <strong>pagos</strong> (aprovados pelo Banco Tranquilo).</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a th:href="@{/admin/pedidos}" class="btn btn-outline-success"><i class="bi bi-list-check me-1"></i>Todos os pedidos</a>
+            <a th:href="@{/admin/dashboard}" class="btn btn-mx"><i class="bi bi-arrow-clockwise me-1"></i>Atualizar</a>
+        </div>
+    </div>
+
+    <div class="alert alert-info small py-2" th:if="${d.pedidosSeed > 0}">
+        <i class="bi bi-info-circle me-1"></i>
+        Inclui <strong th:text="${d.pedidosSeed}">0</strong> pedido(s) de exemplo (canal SEED) gerados na inicialização
+        para os gráficos não começarem vazios. Desative com <code>SEED_PEDIDOS=false</code>.
+    </div>
+
+    <!-- ===== Indicadores ===== -->
+    <div class="row g-3 mb-4">
+        <div class="col-6 col-lg">
+            <div class="card kpi shadow-sm h-100">
+                <div class="kpi-rotulo"><i class="bi bi-cash-stack me-1"></i>Faturamento</div>
+                <div class="kpi-valor" th:text="${'R$ ' + #numbers.formatDecimal(d.faturamento, 1, 'POINT', 2, 'COMMA')}">R$ 0,00</div>
+                <div class="kpi-sub" th:text="${d.itensVendidos + ' itens vendidos'}"></div>
+            </div>
+        </div>
+        <div class="col-6 col-lg">
+            <div class="card kpi shadow-sm h-100">
+                <div class="kpi-rotulo"><i class="bi bi-graph-up-arrow me-1"></i>Lucro</div>
+                <div class="kpi-valor" th:text="${'R$ ' + #numbers.formatDecimal(d.lucro, 1, 'POINT', 2, 'COMMA')}">R$ 0,00</div>
+                <div class="kpi-sub" th:text="${'margem de ' + #numbers.formatDecimal(d.margemPercentual, 1, 'POINT', 1, 'COMMA') + '%'}"></div>
+            </div>
+        </div>
+        <div class="col-6 col-lg">
+            <div class="card kpi shadow-sm h-100">
+                <div class="kpi-rotulo"><i class="bi bi-bag-check me-1"></i>Pedidos pagos</div>
+                <div class="kpi-valor" th:text="${d.pedidosPagos}">0</div>
+                <div class="kpi-sub" th:text="${'ticket médio R$ ' + #numbers.formatDecimal(d.ticketMedio, 1, 'POINT', 2, 'COMMA')}"></div>
+            </div>
+        </div>
+        <div class="col-6 col-lg">
+            <div class="card kpi shadow-sm h-100">
+                <div class="kpi-rotulo"><i class="bi bi-bank me-1"></i>Aprovação do banco</div>
+                <div class="kpi-valor" th:text="${#numbers.formatDecimal(d.taxaAprovacao, 1, 'POINT', 1, 'COMMA') + '%'}">0%</div>
+                <div class="kpi-sub" th:text="${d.pedidosPorStatus[T(com.fiap.mercadoexpresssec.model.StatusPedido).RECUSADO] + ' recusado(s)'}"></div>
+            </div>
+        </div>
+        <div class="col-12 col-lg">
+            <div class="card kpi shadow-sm h-100">
+                <div class="kpi-rotulo"><i class="bi bi-envelope-check me-1"></i>E-mails enviados</div>
+                <div class="kpi-valor" th:text="${d.emailsEnviados}">0</div>
+                <div class="kpi-sub" th:classappend="${d.emailsComFalha > 0} ? 'text-danger'">
+                    <i class="bi bi-exclamation-triangle-fill me-1" th:if="${d.emailsComFalha > 0}"></i><span th:text="${d.emailsComFalha + ' com falha'}"></span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== Status dos pedidos e canais ===== -->
+    <div class="card shadow-sm mb-4">
+        <div class="card-body d-flex flex-wrap gap-3 align-items-center small">
+            <span class="fw-semibold">Pedidos por status:</span>
+            <span th:each="e : ${d.pedidosPorStatus}">
+                <span th:replace="~{fragments/layout :: statusPedido(${e.key})}"></span>
+                <strong th:text="${e.value}">0</strong>
+            </span>
+            <span class="vr d-none d-md-inline"></span>
+            <span class="fw-semibold">Canais:</span>
+            <span th:each="e : ${d.pedidosPorOrigem}"><span class="badge text-bg-light border" th:text="${e.key}"></span> <strong th:text="${e.value}">0</strong></span>
+        </div>
+    </div>
+
+    <!-- ===== Graficos ===== -->
+    <div class="row g-4 mb-4">
+        <div class="col-lg-8">
+            <div class="card shadow-sm h-100">
+                <div class="card-body">
+                    <h2 class="h6 fw-semibold mb-0">Vendas e lucro por dia</h2>
+                    <p class="small text-muted">Últimos 14 dias, em R$</p>
+                    <div class="grafico grafico-alto"><canvas id="graficoDias" role="img" aria-label="Faturamento e lucro por dia nos últimos 14 dias"></canvas></div>
+                    <details class="mt-2 small"><summary>Ver dados em tabela</summary><div id="tabelaDias"></div></details>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-4">
+            <div class="card shadow-sm h-100">
+                <div class="card-body">
+                    <h2 class="h6 fw-semibold mb-0">Faturamento por setor</h2>
+                    <p class="small text-muted">Total vendido em R$</p>
+                    <div class="grafico grafico-alto"><canvas id="graficoSetores" role="img" aria-label="Faturamento por setor"></canvas></div>
+                    <details class="mt-2 small"><summary>Ver dados em tabela</summary><div id="tabelaSetores"></div></details>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-6">
+            <div class="card shadow-sm h-100">
+                <div class="card-body">
+                    <h2 class="h6 fw-semibold mb-0">Produtos mais vendidos</h2>
+                    <p class="small text-muted">Top 5, em unidades</p>
+                    <div class="grafico"><canvas id="graficoTop" role="img" aria-label="Cinco produtos mais vendidos"></canvas></div>
+                    <details class="mt-2 small"><summary>Ver dados em tabela</summary><div id="tabelaTop"></div></details>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-6">
+            <div class="card shadow-sm h-100">
+                <div class="card-body">
+                    <h2 class="h6 fw-semibold mb-0">Estoque atual</h2>
+                    <p class="small text-muted">Unidades por produto · <span class="legenda-alerta"></span> abaixo de <span th:text="${estoqueBaixoLimite}">20</span> unidades</p>
+                    <div class="grafico"><canvas id="graficoEstoque" role="img" aria-label="Estoque atual por produto"></canvas></div>
+                    <details class="mt-2 small"><summary>Ver dados em tabela</summary><div id="tabelaEstoque"></div></details>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== Tabelas ===== -->
+    <div class="row g-4">
+        <div class="col-lg-7">
+            <div class="card shadow-sm h-100">
+                <div class="card-header bg-white fw-semibold"><i class="bi bi-clock-history me-2"></i>Últimas compras</div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-sm table-hover align-middle mb-0">
+                            <thead class="table-light"><tr><th>Pedido</th><th>Cliente</th><th class="text-end">Total</th><th>Status</th></tr></thead>
+                            <tbody>
+                            <tr th:each="p : ${d.ultimosPedidos}">
+                                <td><a class="font-monospace" th:href="@{/pedidos/{c}(c=${p.codigo})}" th:text="${#strings.toUpperCase(#strings.substring(p.codigo, 0, 8))}"></a>
+                                    <div class="small text-muted" th:text="${#temporals.format(p.dataCriacao, 'dd/MM HH:mm')} + ' · ' + ${p.origem}"></div></td>
+                                <td class="small" th:text="${p.clienteNome}"></td>
+                                <td class="text-end text-nowrap" th:text="${'R$ ' + #numbers.formatDecimal(p.valorTotal, 1, 'POINT', 2, 'COMMA')}"></td>
+                                <td><span th:replace="~{fragments/layout :: statusPedido(${p.status})}"></span></td>
+                            </tr>
+                            <tr th:if="${#lists.isEmpty(d.ultimosPedidos)}"><td colspan="4" class="text-center text-muted py-3">Nenhuma compra ainda.</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-5">
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-white fw-semibold"><i class="bi bi-exclamation-triangle me-2"></i>Estoque baixo</div>
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item d-flex justify-content-between small" th:each="m : ${d.estoqueBaixo}">
+                        <a th:href="@{/mercado/{id}/editar(id=${m.id})}" th:text="${m.nome}"></a>
+                        <span class="badge status-RECUSADO"><i class="bi bi-box-seam me-1"></i><span th:text="${m.estoque + ' un.'}"></span></span>
+                    </li>
+                    <li class="list-group-item small text-muted" th:if="${#lists.isEmpty(d.estoqueBaixo)}"><i class="bi bi-check-circle me-1"></i>Nenhum produto com estoque baixo.</li>
+                </ul>
+            </div>
+            <div class="card shadow-sm">
+                <div class="card-header bg-white fw-semibold"><i class="bi bi-envelope me-2"></i>E-mails enviados (TDS_Mercado_Email)</div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-sm align-middle mb-0 small">
+                            <thead class="table-light"><tr><th>Data</th><th>Destinatário</th><th>Status</th></tr></thead>
+                            <tbody>
+                            <tr th:each="e : ${d.ultimosEmails}">
+                                <td class="text-nowrap" th:text="${#temporals.format(e.dataEnvio, 'dd/MM HH:mm')}"></td>
+                                <td class="text-break"><a th:href="@{/pedidos/{c}(c=${e.pedidoCodigo})}" th:text="${e.destinatario}"></a></td>
+                                <td><span class="badge" th:classappend="${e.status.name() == 'ENVIADO'} ? 'status-PAGO' : 'status-RECUSADO'"
+                                          th:title="${e.erro}"><i class="bi me-1" th:classappend="${e.status.name() == 'ENVIADO'} ? 'bi-check-lg' : 'bi-x-lg'"></i><span th:text="${e.status}"></span></span></td>
+                            </tr>
+                            <tr th:if="${#lists.isEmpty(d.ultimosEmails)}"><td colspan="3" class="text-center text-muted py-3">Nenhum e-mail enviado ainda.</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script th:inline="javascript">
+    const dados = {
+        dias: /*[[${d.dias}]]*/ [],
+        faturamentoPorDia: /*[[${d.faturamentoPorDia}]]*/ [],
+        lucroPorDia: /*[[${d.lucroPorDia}]]*/ [],
+        setores: /*[[${d.setores}]]*/ [],
+        faturamentoPorSetor: /*[[${d.faturamentoPorSetor}]]*/ [],
+        topProdutos: /*[[${d.topProdutos}]]*/ [],
+        topProdutosQuantidade: /*[[${d.topProdutosQuantidade}]]*/ [],
+        estoqueProdutos: /*[[${d.estoqueProdutos}]]*/ [],
+        estoqueQuantidade: /*[[${d.estoqueQuantidade}]]*/ [],
+        estoqueBaixo: /*[[${estoqueBaixoLimite}]]*/ 20
+    };
+</script>
+<script>
+    (function () {
+        // Cores: verde da marca (faturamento) e laranja (lucro, tambem tracejado para nao depender so da cor)
+        const COR = {verde: '#1f7a4d', laranja: '#eb6834', alerta: '#c0392b', grade: '#e7e5df', texto: '#52514e'};
+        const brl = v => 'R$ ' + Number(v).toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+
+        Chart.defaults.font.family = '"Poppins", "Segoe UI", system-ui, sans-serif';
+        Chart.defaults.font.size = 12;
+        Chart.defaults.animation.duration = 300;
+        Chart.defaults.color = COR.texto;
+        Chart.defaults.plugins.tooltip.backgroundColor = '#22312a';
+        Chart.defaults.plugins.tooltip.padding = 10;
+        Chart.defaults.plugins.tooltip.cornerRadius = 8;
+
+        const eixoValor = (formatar) => ({
+            beginAtZero: true,
+            grid: {color: COR.grade},
+            border: {display: false},
+            ticks: {callback: v => formatar(v), maxTicksLimit: 6}
+        });
+        const eixoCategoria = {grid: {display: false}, border: {color: COR.grade}};
+
+        // Nomes de produto vem do cadastro: escapa antes de montar o HTML
+        const esc = s => String(s).replace(/[&<>"']/g, c => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[c]));
+
+        function tabela(alvo, cabecalho, linhas) {
+            const el = document.getElementById(alvo);
+            if (!linhas.length) { el.innerHTML = '<p class="text-muted mb-0">Sem dados.</p>'; return; }
+            const th = cabecalho.map(c => '<th>' + esc(c) + '</th>').join('');
+            const tr = linhas.map(l => '<tr>' + l.map(c => '<td>' + esc(c) + '</td>').join('') + '</tr>').join('');
+            el.innerHTML = '<table class="table table-sm mb-0"><thead><tr>' + th + '</tr></thead><tbody>' + tr + '</tbody></table>';
+        }
+
+        function semDados(canvasId) {
+            const canvas = document.getElementById(canvasId);
+            canvas.parentElement.innerHTML = '<div class="grafico-vazio"><i class="bi bi-bar-chart"></i><span>Sem vendas pagas ainda</span></div>';
+        }
+
+        // 1) Vendas e lucro por dia (mesma unidade, um unico eixo)
+        new Chart(document.getElementById('graficoDias'), {
+            type: 'line',
+            data: {
+                labels: dados.dias,
+                datasets: [
+                    {label: 'Faturamento', data: dados.faturamentoPorDia, borderColor: COR.verde, backgroundColor: COR.verde,
+                        borderWidth: 2, pointRadius: 3, pointHoverRadius: 6, tension: 0.25},
+                    {label: 'Lucro', data: dados.lucroPorDia, borderColor: COR.laranja, backgroundColor: COR.laranja,
+                        borderWidth: 2, borderDash: [6, 4], pointRadius: 3, pointHoverRadius: 6, pointStyle: 'rectRot', tension: 0.25}
+                ]
+            },
+            options: {
+                maintainAspectRatio: false,
+                interaction: {mode: 'index', intersect: false},
+                plugins: {
+                    legend: {position: 'top', align: 'end', labels: {usePointStyle: true, boxWidth: 8}},
+                    tooltip: {callbacks: {label: c => c.dataset.label + ': ' + brl(c.parsed.y)}}
+                },
+                scales: {x: eixoCategoria, y: eixoValor(v => 'R$ ' + v.toLocaleString('pt-BR'))}
+            }
+        });
+        tabela('tabelaDias', ['Dia', 'Faturamento', 'Lucro'],
+            dados.dias.map((d, i) => [d, brl(dados.faturamentoPorDia[i]), brl(dados.lucroPorDia[i])]));
+
+        // Barras horizontais de uma serie so (sem legenda: o titulo do card nomeia a serie)
+        function barras(canvasId, labels, valores, formatar, cores) {
+            if (!labels.length) { semDados(canvasId); return; }
+            new Chart(document.getElementById(canvasId), {
+                type: 'bar',
+                data: {labels: labels, datasets: [{data: valores, backgroundColor: cores || COR.verde,
+                        borderRadius: 4, borderSkipped: 'start', barPercentage: 0.7, categoryPercentage: 0.8}]},
+                options: {
+                    indexAxis: 'y',
+                    maintainAspectRatio: false,
+                    plugins: {legend: {display: false}, tooltip: {callbacks: {label: c => formatar(c.parsed.x)}}},
+                    scales: {x: eixoValor(formatar), y: eixoCategoria}
+                }
+            });
+        }
+
+        barras('graficoSetores', dados.setores, dados.faturamentoPorSetor, brl);
+        tabela('tabelaSetores', ['Setor', 'Faturamento'], dados.setores.map((s, i) => [s, brl(dados.faturamentoPorSetor[i])]));
+
+        const unidades = v => Number(v).toLocaleString('pt-BR') + ' un.';
+        barras('graficoTop', dados.topProdutos, dados.topProdutosQuantidade, unidades);
+        tabela('tabelaTop', ['Produto', 'Unidades'], dados.topProdutos.map((p, i) => [p, unidades(dados.topProdutosQuantidade[i])]));
+
+        barras('graficoEstoque', dados.estoqueProdutos, dados.estoqueQuantidade, unidades,
+            dados.estoqueQuantidade.map(q => q < dados.estoqueBaixo ? COR.alerta : COR.verde));
+        tabela('tabelaEstoque', ['Produto', 'Estoque'], dados.estoqueProdutos.map((p, i) =>
+            [p, unidades(dados.estoqueQuantidade[i]) + (dados.estoqueQuantidade[i] < dados.estoqueBaixo ? ' ⚠ baixo' : '')]));
+    })();
+</script>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>
