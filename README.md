@@ -264,7 +264,7 @@ Faturamento e lucro consideram só pedidos **PAGOS**. `/admin/pedidos` lista tod
 | `GET http://localhost:8081/api/transacoes` | público | Transações do Banco Tranquilo |
 | `GET http://localhost:8081/api/status` | público | Limite e total processado pelo banco |
 
-Erros voltam em JSON (`ProblemDetail`): `400` dados inválidos, `401` sem credenciais, `403` sem permissão, `404` pedido inexistente, `422` estoque insuficiente, `503` RabbitMQ indisponível.
+Erros voltam em JSON: `400` dados inválidos, `401` sem credenciais, `403` sem permissão, `404` pedido inexistente, `422` estoque insuficiente e `503` RabbitMQ indisponível (os erros de negócio usam o formato `ProblemDetail`, RFC 7807).
 
 **Exemplo de requisição de compra** (`postman/exemplo-compra.json`):
 
@@ -303,7 +303,39 @@ Cerca de 2 segundos depois, `GET /api/compras/{codigo}` retorna `"status": "PAGO
 
 **Coleção pronta:** importe `postman/MercadoExpress-BancoTranquilo.postman_collection.json` no Postman (ou Insomnia). Ela tem 10 requisições com scripts de teste que encadeiam o código do pedido: compra aprovada, consulta, transação no banco, **compra recusada por limite** (30 meias = R$ 1.047,00), estoque insuficiente (422) e acesso sem credenciais (401). Rode tudo com o **Collection Runner**.
 
-<!-- Print do Postman: rode a coleção no Collection Runner, salve a captura como assets/p2_postman.png e troque este comentário por: ![Postman](assets/p2_postman.png) -->
+**Resultado do Collection Runner:** 10 requisições e 13 testes, todos aprovados (0 erros).
+
+![Postman - Collection Runner](assets/p2_postman.png)
+
+#### Requisições no Postman
+
+**1. Produtos disponíveis** – `GET /api/produtos` (200): ids, preço, custo e estoque para montar a compra.
+
+![Postman - produtos](assets/p2_postman_produtos.png)
+
+**2. Compra** – `POST /api/compras` (202 Accepted): o pedido é criado como `AGUARDANDO_PAGAMENTO` e enviado ao Banco Tranquilo pelo RabbitMQ.
+
+![Postman - compra](assets/p2_postman_compra.png)
+
+**3. Compra paga** – `GET /api/compras/{codigo}` cerca de 2 segundos depois: `"status": "PAGO"`, com o `transacaoId` e a mensagem do banco.
+
+![Postman - compra paga](assets/p2_postman_compra_paga.png)
+
+**4. Transação no Banco Tranquilo** – `GET http://localhost:8081/api/transacoes/{codigo}`: o microsserviço do banco registrou a mesma compra como `APROVADO`.
+
+![Postman - transação no banco](assets/p2_postman_transacao_banco.png)
+
+**5. Compra recusada** – 30 meias esportivas (R$ 1.047,00), acima do limite: `"status": "RECUSADO"` com "Limite insuficiente". O estoque reservado é devolvido.
+
+![Postman - compra recusada](assets/p2_postman_compra_recusada.png)
+
+**6. Estoque insuficiente** – `POST /api/compras` com 999 unidades: `422 Unprocessable Entity`, sem criar pedido.
+
+![Postman - erro 422](assets/p2_postman_erro_422.png)
+
+**7. Sem credenciais** – `GET /api/compras` sem autenticação: `401 Unauthorized` (não redireciona para a tela de login).
+
+![Postman - erro 401](assets/p2_postman_erro_401.png)
 
 ### Testes internos pelo painel do RabbitMQ (Management UI)
 
