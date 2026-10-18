@@ -1,5 +1,5 @@
 CP5 - Parte 1 (Spring Security) - TDS FIAP
-Turma: [TODO - preencher]
+Turma: 2TDSR
 
 Integrantes do grupo:
 - Nome: Eduardo Martins | RM: 562259

@@ -1,6 +1,6 @@
 CP5 - Parte 2 (Microsservicos com RabbitMQ - Spring de Mensageria com API e e-mail) - TDS FIAP
 Professor: Dr. Marcel Stefan Wagner
-Turma: [TODO - preencher]
+Turma: 2TDSR
 
 Integrantes do grupo:
 - Nome: Eduardo Martins | RM: 562259
