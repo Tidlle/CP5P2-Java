@@ -9,9 +9,6 @@ import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
-/**
- * Consome as requisicoes de pagamento do Mercado Express e publica a resposta.
- */
 @Slf4j
 @Component
 public class PagamentoListener {

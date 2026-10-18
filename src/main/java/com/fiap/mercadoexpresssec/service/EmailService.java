@@ -22,9 +22,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Locale;
 
-/**
- * Envia o e-mail de confirmacao de pagamento e registra cada tentativa na tabela TDS_Mercado_Email.
- */
 @Slf4j
 @Service
 public class EmailService {

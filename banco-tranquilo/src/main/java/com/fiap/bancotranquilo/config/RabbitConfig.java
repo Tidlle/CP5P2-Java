@@ -12,11 +12,6 @@ import org.springframework.amqp.support.converter.MessageConverter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-/**
- * Exchanges e filas do Banco Tranquilo.
- * Os nomes e argumentos sao identicos aos declarados no Mercado Express (MensageriaConfig),
- * porque o RabbitMQ recusa redeclarar uma fila com argumentos diferentes.
- */
 @Configuration
 public class RabbitConfig {
 

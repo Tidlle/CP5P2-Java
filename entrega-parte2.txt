@@ -7,7 +7,7 @@ Integrantes do grupo:
 - Nome: João Victor Alcantara | RM: 562707
 
 Link do GitHub (README com a descricao completa do projeto): https://github.com/Tidlle/CP5P2-Java
-Video (YouTube, nao listado): [TODO - preencher]
+Video (YouTube, nao listado): https://www.youtube.com/watch?v=OPR8U4P2hUM
 
 IDE utilizada: IntelliJ IDEA
 

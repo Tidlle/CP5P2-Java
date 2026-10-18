@@ -14,7 +14,7 @@ Aplicação **Spring Boot** para uma empresa do tipo **mercado express** (meias,
 
 - **GitHub (Parte 2):** https://github.com/Tidlle/CP5P2-Java
 - **Deploy da Parte 1 (produção):** https://cp5p1-java.onrender.com — Render (Web Service com Docker + PostgreSQL gerenciado)
-- **Vídeo da Parte 2:** _[preencher com o link do YouTube (não listado)]_
+- **Vídeo da Parte 2:** https://www.youtube.com/watch?v=OPR8U4P2hUM
 - **IDE utilizada:** IntelliJ IDEA
 
 ## Sumário

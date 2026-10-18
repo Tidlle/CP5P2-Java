@@ -24,12 +24,6 @@ import java.util.Map;
 import java.util.TreeMap;
 import java.util.UUID;
 
-/**
- * Regras da compra (Parte 2):
- * 1. finalizar: valida e reserva o estoque, grava o pedido como AGUARDANDO_PAGAMENTO e, apos o commit,
- *    envia a requisicao ao Banco Tranquilo pelo RabbitMQ;
- * 2. processarResposta: APROVADO -> PAGO (dispara o e-mail); RECUSADO -> devolve o estoque.
- */
 @Slf4j
 @Service
 public class PedidoService {
@@ -45,9 +39,6 @@ public class PedidoService {
         this.eventPublisher = eventPublisher;
     }
 
-    /**
-     * @param itens produtoId -> quantidade
-     */
     @Transactional
     public Pedido finalizar(Map<Long, Integer> itens, String clienteNome, String clienteEmail,
                             FormaPagamento formaPagamento, OrigemPedido origem) {
@@ -135,7 +126,6 @@ public class PedidoService {
         }
     }
 
-    /** Chamado depois do commit, quando o RabbitMQ esta fora do ar: por isso abre uma transacao nova. */
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void registrarFalhaComunicacao(String codigo) {
         pedidoRepository.findByCodigo(codigo).ifPresent(pedido -> {

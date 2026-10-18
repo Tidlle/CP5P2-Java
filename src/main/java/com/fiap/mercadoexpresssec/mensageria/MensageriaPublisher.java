@@ -8,9 +8,6 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.event.TransactionPhase;
 import org.springframework.transaction.event.TransactionalEventListener;
 
-/**
- * Publica as mensagens no RabbitMQ somente depois que a transacao do banco de dados foi confirmada.
- */
 @Slf4j
 @Component
 public class MensageriaPublisher {
@@ -23,7 +20,6 @@ public class MensageriaPublisher {
         this.pedidoService = pedidoService;
     }
 
-    /** Compra finalizada -> requisicao de pagamento para o Banco Tranquilo. */
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void solicitarPagamento(PedidoCriadoEvent event) {
         PagamentoRequisicao requisicao = event.requisicao();
@@ -39,7 +35,6 @@ public class MensageriaPublisher {
         }
     }
 
-    /** Pagamento aprovado -> mensagem na fila de e-mails. */
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void solicitarEmailConfirmacao(PedidoPagoEvent event) {
         publicarEmailConfirmacao(event.pedidoCodigo(), false);

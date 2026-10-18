@@ -12,26 +12,6 @@ import org.springframework.amqp.support.converter.MessageConverter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-/**
- * Topologia do RabbitMQ usada na integracao Mercado Express <-> Banco Tranquilo.
- *
- * <pre>
- *  Mercado Express                         Banco Tranquilo (microsservico banco-tranquilo/)
- *  ---------------                         ------------------------------------------------
- *  finalizar compra
- *    -> banco.tranquilo.exchange  --[pagamento.solicitado]-->  banco.tranquilo.pagamentos
- *                                                                 (aprova ou recusa)
- *  mercado.express.pagamentos.respostas  <--[pagamento.respondido]--  mercado.express.exchange
- *    (PAGO -> publica e-mail)
- *    -> mercado.express.exchange  --[email.confirmacao]-->  mercado.express.notificacoes.email
- *                                                             (envia e grava em TDS_Mercado_Email)
- *
- *  Mensagens que falham 3 vezes vao para as DLQs (banco.tranquilo.dlq / mercado.express.dlq).
- * </pre>
- *
- * As declaracoes da exchange e da fila do banco sao identicas as do microsservico banco-tranquilo,
- * entao tanto faz qual aplicacao sobe primeiro: nenhuma mensagem se perde.
- */
 @Configuration
 public class MensageriaConfig {
 

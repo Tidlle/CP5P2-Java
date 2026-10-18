@@ -16,15 +16,6 @@ import java.time.LocalDateTime;
 import java.util.Locale;
 import java.util.UUID;
 
-/**
- * Regras de autorizacao do Banco Tranquilo:
- * - valor ausente ou menor/igual a zero -> RECUSADO
- * - cliente sem e-mail                  -> RECUSADO
- * - valor acima do limite (banco.limite-aprovacao, padrao R$ 1.000,00) -> RECUSADO
- * - caso contrario                      -> APROVADO
- *
- * Idempotente: se o mesmo pedido chegar de novo (reentrega do RabbitMQ), devolve a mesma resposta.
- */
 @Slf4j
 @Service
 public class AutorizacaoService {
