@@ -9,7 +9,8 @@ Aplicação **Spring Boot** para uma empresa do tipo **mercado express** (meias,
 
 - Eduardo Martins — RM562259
 - João Victor Alcantara — RM562707
-
+- Thiago Sposito — RM569641
+ 
 ## Links
 
 - **GitHub (Parte 2):** https://github.com/Tidlle/CP5P2-Java
