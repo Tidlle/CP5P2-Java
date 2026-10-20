@@ -5,6 +5,7 @@ Turma: 2TDSR
 Integrantes do grupo:
 - Nome: Eduardo Martins | RM: 562259
 - Nome: João Victor Alcantara | RM: 562707
+- Nome: Thiago Sposito | RM: 569461
 
 Link do GitHub (README com a descricao completa do projeto): https://github.com/Tidlle/CP5P2-Java
 Video (YouTube, nao listado): https://www.youtube.com/watch?v=OPR8U4P2hUM
